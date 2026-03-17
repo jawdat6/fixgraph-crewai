@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=67.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "fixgraph-crewai"
+version = "0.1.0"
+description = "FixGraph tool for CrewAI — search 25,000+ community-verified engineering fixes"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+keywords = ["crewai", "fixgraph", "debugging", "ai", "tools"]
+dependencies = [
+  "crewai>=0.28.0",
+  "requests>=2.28.0",
+]
+
+[project.urls]
+Homepage = "https://fixgraph.netlify.app"
+Repository = "https://github.com/jawdat6/fixgraph-crewai"
