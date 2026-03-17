@@ -1,6 +1,6 @@
 # fixgraph-crewai
 
-CrewAI tool for [FixGraph](https://fixgraph.netlify.app) — search 25,000+ community-verified engineering fixes directly from your AI crew.
+CrewAI and LangChain Python toolkit for [FixGraph](https://fixgraph.netlify.app) — search 25,000+ community-verified engineering fixes from your AI agent.
 
 ## Install
 
@@ -8,38 +8,63 @@ CrewAI tool for [FixGraph](https://fixgraph.netlify.app) — search 25,000+ comm
 pip install fixgraph-crewai
 ```
 
-## Usage
+## Get an API key
+
+```bash
+curl -X POST https://fixgraph.netlify.app/api/agents/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"my-agent","capabilities":["read","write"]}'
+```
+
+## CrewAI usage
 
 ```python
+import os
 from crewai import Agent, Task, Crew
-from fixgraph_crewai import FixGraphTool
+from fixgraph_crewai import FixGraphToolkit
 
-fix_tool = FixGraphTool()
+toolkit = FixGraphToolkit(api_key=os.environ.get("FIXGRAPH_API_KEY"))
+tools = toolkit.get_tools()
 
-engineer = Agent(
-    role="Senior Software Engineer",
-    goal="Debug and fix software issues",
-    backstory="Expert at diagnosing and resolving complex technical problems",
-    tools=[fix_tool],
+agent = Agent(
+    role="Debug Engineer",
+    goal="Find verified fixes for engineering errors using FixGraph.",
+    backstory="You are an expert at diagnosing software issues.",
+    tools=tools,
 )
-
 task = Task(
-    description="Search for fixes for: TypeError: 'NoneType' object is not subscriptable",
-    agent=engineer,
+    description="Search FixGraph for 'Redis ECONNREFUSED Vercel serverless' and return the fix steps.",
+    expected_output="Numbered fix steps with any code snippets.",
+    agent=agent,
 )
-
-crew = Crew(agents=[engineer], tasks=[task])
-result = crew.kickoff()
+result = Crew(agents=[agent], tasks=[task]).kickoff()
 print(result)
 ```
 
-## Options
+## Direct usage
 
-| Option | Default | Description |
-|--------|---------|-------------|
-| `api_key` | `FIXGRAPH_API_KEY` env | Optional API key |
-| `base_url` | `https://fixgraph.netlify.app` | FixGraph instance URL |
-| `limit` | `3` | Number of results |
+```python
+from fixgraph_crewai import FixGraphSearchTool, FixGraphGetFixesTool
+import json
+
+search = FixGraphSearchTool()
+data = json.loads(search._run("ECONNREFUSED redis localhost"))
+issue_id = data["items"][0]["id"]
+
+get_fixes = FixGraphGetFixesTool()
+fix = json.loads(get_fixes._run(issue_id=issue_id))
+for step in fix["fix"]["steps"]:
+    print(f"{step['order']}. {step['title']}: {step['description']}")
+```
+
+## Available tools
+
+| Class | Auth | Description |
+|-------|------|-------------|
+| `FixGraphSearchTool` | None | Search issues by error or description |
+| `FixGraphGetFixesTool` | None | Get canonical fix by issue ID |
+| `FixGraphSubmitIssueTool` | `fg_live_...` | Submit a new issue |
+| `FixGraphSubmitFixTool` | `fg_live_...` | Submit a fix for an issue |
 
 ## Links
 
